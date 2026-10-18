@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>sockmonke</title>
+<meta name="description" content="Browser games by sockmonke: capybaras on the Moon, a Chinese handwriting game, a fab-floor tower defense and a Spectre tiling explorer.">
+<meta property="og:title" content="sockmonke">
+<meta property="og:description" content="Small games that run in your browser. One HTML file each, nothing to install.">
+<meta name="theme-color" content="#e8e6e1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15171c" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Silkscreen&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #e8e6e1;          /* moon dust */
+  --crater: #dcd9d2;
+  --card: #f7f6f3;
+  --ink: #23262d;
+  --muted: #5d616a;
+  --line: #cfccc5;
+  --earth: #2a5fae;       /* buttons, links */
+  --earth-ink: #ffffff;
+  --sun: #d97f12;         /* the low polar sun */
+  --rim: #cbc8c0;
+  --rim-edge: #b3afa6;
+  --suit: #fbfbf9;
+  --suit-line: #8d929c;
+  --pack: #aeb3bc;
+  --glass: rgba(170, 210, 245, 0.22);
+  --glass-line: #9fb3c8;
+  --star: 0;
+  --puff: #c9c5bc;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #15171c; --crater: #1b1d23; --card: #1e2128; --ink: #ebe8e2; --muted: #a3a7b0; --line: #343844;
+    --earth: #8db7ff; --earth-ink: #10131a; --sun: #ffb347;
+    --rim: #2b2e36; --rim-edge: #3c404b; --suit: #e9e9e6; --suit-line: #6b707b; --pack: #8a909b;
+    --glass: rgba(170, 210, 245, 0.16); --glass-line: #7f93a8; --star: 1; --puff: #3a3e48;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #15171c; --crater: #1b1d23; --card: #1e2128; --ink: #ebe8e2; --muted: #a3a7b0; --line: #343844;
+  --earth: #8db7ff; --earth-ink: #10131a; --sun: #ffb347;
+  --rim: #2b2e36; --rim-edge: #3c404b; --suit: #e9e9e6; --suit-line: #6b707b; --pack: #8a909b;
+  --glass: rgba(170, 210, 245, 0.16); --glass-line: #7f93a8; --star: 1; --puff: #3a3e48;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background-color: var(--bg);
+  /* a scatter of small craters, tiled */
+  background-image:
+    radial-gradient(circle at 30px 40px, transparent 7px, var(--crater) 7.5px, var(--crater) 9px, transparent 9.5px),
+    radial-gradient(circle at 150px 90px, var(--crater) 3px, transparent 3.5px),
+    radial-gradient(circle at 95px 170px, transparent 12px, var(--crater) 12.5px, var(--crater) 14px, transparent 14.5px),
+    radial-gradient(circle at 190px 20px, var(--crater) 2px, transparent 2.5px),
+    radial-gradient(circle at 200px 200px, var(--crater) 4px, transparent 4.5px);
+  background-size: 230px 230px, 310px 310px, 370px 370px, 270px 270px, 330px 330px;
+  color: var(--ink);
+  font: 17px/1.6 "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding: 0 0 120px;
+  -webkit-text-size-adjust: 100%;
+}
+a { color: var(--earth); text-underline-offset: 2px; }
+a:focus-visible, .btn:focus-visible, .walker:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; border-radius: 8px; }
+
+/* header */
+.hero { max-width: 720px; margin: 0 auto; padding: 28px 16px 0; text-align: center; }
+.scene { display: block; width: 100%; max-width: 420px; height: auto; margin: 0 auto -4px; }
+.scene .star { opacity: calc(0.15 + 0.85 * var(--star)); }
+h1 {
+  font-family: "Silkscreen", "Atkinson Hyperlegible", monospace;
+  font-weight: 400;
+  font-size: clamp(2.6rem, 11vw, 4.2rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  margin: 10px 0 10px;
+}
+.tagline { margin: 0 auto; max-width: 36em; color: var(--muted); text-wrap: balance; }
+
+/* sections */
+main { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+h2 { font-size: 1.45rem; line-height: 1.25; margin: 48px 0 16px; }
+
+.game {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-left: 8px solid var(--spine);
+  border-radius: 10px 18px 18px 10px;
+  padding: 18px 20px 20px;
+  margin: 0 0 16px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .game { border-left-color: var(--spine-dark, var(--spine)); } }
+:root[data-theme="dark"] .game { border-left-color: var(--spine-dark, var(--spine)); }
+.game h3 { margin: 0; font-size: 1.32rem; line-height: 1.25; }
+.game h3 a { color: inherit; text-decoration: none; }
+.game h3 a:hover { color: var(--earth); text-decoration: underline; }
+.game h3 [lang="zh"] { font-weight: 400; color: var(--muted); margin-left: 4px; }
+.kind { margin: 2px 0 10px; color: var(--muted); font-style: italic; }
+.game p.desc { margin: 0 0 16px; max-width: 38em; }
+.links { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn {
+  display: inline-flex; align-items: center; min-height: 44px;
+  padding: 8px 18px; border-radius: 999px;
+  font-weight: 700; font-size: 0.97rem; text-decoration: none;
+  border: 2px solid var(--earth); color: var(--earth); background: transparent;
+}
+.btn.play { background: var(--earth); color: var(--earth-ink); }
+.btn:hover { border-color: var(--sun); color: var(--sun); }
+.btn.play:hover { background: var(--sun); border-color: var(--sun); color: var(--earth-ink); }
+
+.about { border: 2px dashed var(--line); border-radius: 18px; padding: 18px 20px; }
+.about p { margin: 0 0 10px; max-width: 38em; }
+.about p:last-child { margin-bottom: 0; }
+footer { max-width: 720px; margin: 40px auto 0; padding: 0 16px; text-align: center; color: var(--muted); font-size: 0.9rem; }
+footer p { margin: 4px 0; }
+
+/* the capybara who walks the bottom of the page, in one-sixth gravity */
+.track { position: fixed; left: 0; right: 0; bottom: 0; height: 110px; overflow: hidden; pointer-events: none; z-index: 20; }
+.walker {
+  position: absolute; left: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
+  width: 64px; height: 56px; padding: 0; border: 0; background: none; cursor: pointer;
+  pointer-events: auto; -webkit-tap-highlight-color: transparent;
+  animation: cross 46s linear infinite;
+}
+.walker:hover { animation-play-state: paused; }
+.walker:hover .bound, .walker:hover .leg, .walker:hover .dust { animation-play-state: paused; }
+@keyframes cross {
+  0%     { transform: translateX(-90px) scaleX(1); }
+  49.5%  { transform: translateX(calc(100vw + 20px)) scaleX(1); }
+  50%    { transform: translateX(calc(100vw + 20px)) scaleX(-1); }
+  99.5%  { transform: translateX(-90px) scaleX(-1); }
+  100%   { transform: translateX(-90px) scaleX(1); }
+}
+.walker svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.bound { animation: bound 1.7s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes bound {
+  0%, 100% { transform: translateY(0); animation-timing-function: cubic-bezier(.2,.6,.4,1); }
+  50%      { transform: translateY(-16px) rotate(-4deg); animation-timing-function: cubic-bezier(.6,0,.8,.4); }
+}
+.leg { transform-box: fill-box; transform-origin: 50% 3px; }
+.leg.a { animation: legA 1.7s ease-in-out infinite; }
+.leg.b { animation: legB 1.7s ease-in-out infinite; }
+@keyframes legA { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-22deg); } 75% { transform: rotate(14deg); } }
+@keyframes legB { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(18deg); } 75% { transform: rotate(-16deg); } }
+.dust { animation: dust 1.7s ease-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+@keyframes dust { 0% { opacity: .9; transform: scale(.4); } 30% { opacity: 0; transform: scale(1.4); } 100% { opacity: 0; } }
+.jump { transform-box: fill-box; transform-origin: 50% 100%; }
+.jump.go { animation: jump 2.4s cubic-bezier(.25,.8,.35,1); }
+@keyframes jump {
+  0% { transform: translateY(0); }
+  45% { transform: translateY(-62px) rotate(-10deg); }
+  100% { transform: translateY(0) rotate(0); }
+}
+.pop {
+  position: fixed; bottom: 90px; width: 26px; height: 26px; margin-left: -13px;
+  pointer-events: none; z-index: 21; animation: rise 2.2s ease-out forwards;
+}
+.pop svg { width: 100%; height: 100%; }
+@keyframes rise {
+  0% { opacity: 0; transform: translateY(8px) scale(.5); }
+  15% { opacity: 1; transform: translateY(-6px) scale(1); }
+  100% { opacity: 0; transform: translateY(-90px) rotate(25deg) scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .walker, .bound, .leg, .dust, .jump.go { animation: none; }
+  .dust { opacity: 0; }
+  .walker { left: auto; right: 16px; }
+  .pop { animation-duration: 1.2s; }
+}
+@media (max-width: 520px) {
+  body { font-size: 16px; }
+  .hero { padding-top: 18px; }
+  .game { padding: 16px 16px 18px; }
+  .walker { width: 54px; height: 47px; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <svg class="scene" viewBox="0 0 320 150" role="img" aria-label="A capybara in a space suit and bubble helmet standing on a crater rim on the Moon, with Earth low in the sky">
+    <defs>
+      <clipPath id="earth-clip"><circle cx="252" cy="44" r="17"/></clipPath>
+      <linearGradient id="ground-fade" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
+      <mask id="ground-mask" maskUnits="userSpaceOnUse" x="0" y="110" width="320" height="40">
+        <rect x="0" y="110" width="320" height="40" fill="url(#ground-fade)"/>
+      </mask>
+    </defs>
+    <g fill="currentColor" style="color: var(--muted)">
+      <circle class="star" cx="34" cy="22" r="1.1"/><circle class="star" cx="78" cy="56" r="0.8"/><circle class="star" cx="118" cy="14" r="1"/>
+      <circle class="star" cx="196" cy="30" r="0.8"/><circle class="star" cx="292" cy="88" r="1.1"/><circle class="star" cx="22" cy="92" r="0.8"/>
+      <circle class="star" cx="300" cy="18" r="0.9"/><circle class="star" cx="168" cy="62" r="0.7"/>
+    </g>
+    <g clip-path="url(#earth-clip)">
+      <circle cx="252" cy="44" r="17" fill="#3c7fd4"/>
+      <path d="M240 34c5-4 11-3 13 2s-2 7-6 9-4 7-9 6-6-6-4-10 2-5 6-7z" fill="#6cb36f"/>
+      <path d="M258 49c4-2 9 0 10 4s-3 7-7 6-6-7-3-10z" fill="#6cb36f"/>
+      <path d="M236 44c6-2 14-1 20 1M248 30c5 0 10 1 14 4" stroke="#fff" stroke-opacity=".55" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <circle cx="263" cy="40" r="19" fill="#0b1020" fill-opacity=".5"/>
+    </g>
+    <g mask="url(#ground-mask)">
+      <ellipse cx="160" cy="214" rx="196" ry="96" fill="var(--rim)" stroke="var(--rim-edge)" stroke-width="2"/>
+      <ellipse cx="82" cy="134" rx="13" ry="3.2" fill="var(--rim-edge)" opacity=".6"/>
+      <ellipse cx="236" cy="136" rx="9" ry="2.4" fill="var(--rim-edge)" opacity=".6"/>
+      <ellipse cx="268" cy="143" rx="5" ry="1.5" fill="var(--rim-edge)" opacity=".6"/>
+    </g>
+    <svg x="116" y="58" width="88" height="73" viewBox="0 -5 72 60" aria-hidden="true">
+      <rect x="6" y="20" width="12" height="18" rx="3" fill="var(--pack)"/>
+      <g fill="var(--suit)" stroke="var(--suit-line)" stroke-width="1.5">
+        <rect x="16" y="36" width="6" height="15" rx="3"/><rect x="40" y="36" width="6" height="15" rx="3"/>
+      </g>
+      <rect x="12" y="22" width="38" height="20" rx="10" fill="var(--suit)" stroke="var(--suit-line)" stroke-width="1.5"/>
+      <rect x="25" y="22.8" width="4.5" height="18.4" fill="#2a5fae"/>
+      <g fill="var(--suit)" stroke="var(--suit-line)" stroke-width="1.5">
+        <rect x="22" y="36" width="6" height="15" rx="3"/><rect x="46" y="36" width="6" height="15" rx="3"/>
+      </g>
+      <g fill="#3a3d45"><rect x="15.5" y="47" width="7" height="4.5" rx="2"/><rect x="21.5" y="47" width="7" height="4.5" rx="2"/><rect x="39.5" y="47" width="7" height="4.5" rx="2"/><rect x="45.5" y="47" width="7" height="4.5" rx="2"/></g>
+      <rect x="41" y="19" width="12" height="6" rx="2" fill="#9aa1ad"/>
+      <rect x="42" y="4" width="24" height="16" rx="6" fill="#9b6a44"/>
+      <circle cx="46" cy="4.6" r="2.6" fill="#6f4a2e"/>
+      <rect x="60.5" y="5.5" width="6" height="6.5" rx="2.2" fill="#3a2a20"/>
+      <circle cx="55" cy="9" r="1.6" fill="#1e1612"/>
+      <ellipse cx="57" cy="15" rx="2.6" ry="1.4" fill="#e53b7a" fill-opacity=".55"/>
+      <circle cx="54" cy="12" r="15.5" fill="var(--glass)" stroke="var(--glass-line)" stroke-width="1.5"/>
+      <path d="M59.5 -1.6 A14 14 0 0 1 67 6" stroke="#fff" stroke-opacity=".85" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+  </svg>
+  <h1>sockmonke</h1>
+  <p class="tagline">Small games that run in your browser. One HTML file each, nothing to install.</p>
+</header>
+
+<main>
+  <section aria-labelledby="games">
+    <h2 id="games">Games</h2>
+
+    <article class="game" style="--spine:#ffb347">
+      <h3><a href="https://sockmonke-rgb.github.io/lunabara/">Lunabara</a></h3>
+      <p class="kind">A 3D moon colony you watch</p>
+      <p class="desc">Seven capybaras in bubble helmets live on the Shackleton crater rim, and you follow their day through the colony's cameras: drilling cores, building a fusion reactor, unloading landers from Earth and soaking in yuzu baths with Earth on the horizon. It runs itself, and you can lend a hand at any station.</p>
+      <div class="links">
+        <a class="btn play" href="https://sockmonke-rgb.github.io/lunabara/">Play</a>
+        <a class="btn" href="https://github.com/sockmonke-rgb/lunabara">Source code</a>
+      </div>
+    </article>
+
+    <article class="game" style="--spine:#c08a54">
+      <h3><a href="https://sockmonke-rgb.github.io/astrobara/">Astrobara</a></h3>
+      <p class="kind">Turn-based lunar survival</p>
+      <p class="desc">A herd of capybaras holds a colony on the crater rim, and the enemy is the night. A lunar day is 29 turns and only 15 are lit, so everything you build in the light is a bill that comes due in the dark. The game is deciding what to switch off.</p>
+      <div class="links">
+        <a class="btn play" href="https://sockmonke-rgb.github.io/astrobara/">Play</a>
+        <a class="btn" href="https://sockmonke.itch.io/astrobara">itch.io</a>
+        <a class="btn" href="https://github.com/sockmonke-rgb/astrobara">Source code</a>
+      </div>
+    </article>
+
+    <article class="game" style="--spine:#c1352b; --spine-dark:#e0584d">
+      <h3><a href="https://sockmonke-rgb.github.io/ink-strike/">Ink Strike <span lang="zh">笔阵</span></a></h3>
+      <p class="kind">Chinese handwriting against the clock</p>
+      <p class="desc">Characters drift down toward your desk, and you write each one before it lands. Stroke order and direction both count. Each wave shares a radical, so you start seeing it everywhere. About 180 characters from HSK 1 to 4, with a no-clock mode for practice.</p>
+      <div class="links">
+        <a class="btn play" href="https://sockmonke-rgb.github.io/ink-strike/">Play</a>
+        <a class="btn" href="https://github.com/sockmonke-rgb/ink-strike">Source code</a>
+      </div>
+    </article>
+
+    <article class="game" style="--spine:#4fd3e8">
+      <h3><a href="https://sockmonke-rgb.github.io/silicon-cycle/">Silicon Cycle</a></h3>
+      <p class="kind">Tower defense on a chip fab floor</p>
+      <p class="desc">Bear forces walk the fab floor toward your book, and you hold them off with positions across the chip stack, from memory and analog to EUV lithography. The boom-and-bust cycle swings prices under you, and every wave you hold a position, it pays more. Clear wave 30 to confirm the thesis.</p>
+      <div class="links">
+        <a class="btn play" href="https://sockmonke-rgb.github.io/silicon-cycle/">Play</a>
+        <a class="btn" href="https://github.com/sockmonke-rgb/silicon-cycle">Source code</a>
+      </div>
+    </article>
+  </section>
+
+  <section aria-labelledby="tools">
+    <h2 id="tools">Tools</h2>
+
+    <article class="game" style="--spine:#2c3f9e; --spine-dark:#8b94ee">
+      <h3><a href="https://sockmonke-rgb.github.io/Spectre-Lab/">Spectre Lab</a></h3>
+      <p class="kind">An explorer for the Spectre tile</p>
+      <p class="desc">The Spectre, found in 2023, is a single tile that covers the plane but never in a repeating pattern. Pan across an endless tiling, tap any tile to see where it sits in the hierarchy, paint your own design in the tile studio and export it as a PNG or PDF.</p>
+      <div class="links">
+        <a class="btn play" href="https://sockmonke-rgb.github.io/Spectre-Lab/">Open</a>
+        <a class="btn" href="https://github.com/sockmonke-rgb/Spectre-Lab">Source code</a>
+      </div>
+    </article>
+  </section>
+
+  <section aria-labelledby="about">
+    <h2 id="about">About</h2>
+    <div class="about">
+      <p>These are made by Mark Florentino LLC. Astrobara and Ink Strike are made together with Kittenmancer.</p>
+      <p>Everything here runs in a browser tab from a single HTML file, with nothing to install and no account to make. The source for each one is on GitHub.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>© 2026 Mark Florentino LLC</p>
+  <p>Updated 18 October 2026</p>
+</footer>
+
+<div class="track">
+  <button class="walker" type="button" aria-label="A capybara bounding along. Tap to make it jump.">
+    <svg viewBox="0 -5 72 60" aria-hidden="true">
+      <ellipse class="dust" cx="34" cy="53" rx="16" ry="3" fill="var(--puff)"/>
+      <g class="jump"><g class="bound">
+        <rect x="6" y="20" width="12" height="18" rx="3" fill="var(--pack)"/>
+        <g fill="var(--suit)" stroke="var(--suit-line)" stroke-width="1.5">
+          <rect class="leg a" x="16" y="36" width="6" height="15" rx="3"/><rect class="leg b" x="40" y="36" width="6" height="15" rx="3"/>
+        </g>
+        <rect x="12" y="22" width="38" height="20" rx="10" fill="var(--suit)" stroke="var(--suit-line)" stroke-width="1.5"/>
+        <rect x="25" y="22.8" width="4.5" height="18.4" fill="#2a5fae"/>
+        <g fill="var(--suit)" stroke="var(--suit-line)" stroke-width="1.5">
+          <rect class="leg b" x="22" y="36" width="6" height="15" rx="3"/><rect class="leg a" x="46" y="36" width="6" height="15" rx="3"/>
+        </g>
+        <rect x="41" y="19" width="12" height="6" rx="2" fill="#9aa1ad"/>
+        <rect x="42" y="4" width="24" height="16" rx="6" fill="#9b6a44"/>
+        <circle cx="46" cy="4.6" r="2.6" fill="#6f4a2e"/>
+        <rect x="60.5" y="5.5" width="6" height="6.5" rx="2.2" fill="#3a2a20"/>
+        <circle cx="55" cy="9" r="1.6" fill="#1e1612"/>
+        <ellipse cx="57" cy="15" rx="2.6" ry="1.4" fill="#e53b7a" fill-opacity=".55"/>
+        <circle cx="54" cy="12" r="15.5" fill="var(--glass)" stroke="var(--glass-line)" stroke-width="1.5"/>
+        <path d="M59.5 -1.6 A14 14 0 0 1 67 6" stroke="#fff" stroke-opacity=".85" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </g></g>
+    </svg>
+  </button>
+</div>
+
+<script>
+(function () {
+  var walker = document.querySelector(".walker");
+  var jump = walker.querySelector(".jump");
+  var yuzu = '<svg viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="8" fill="#f2c230"/><circle cx="9.5" cy="11" r="1.6" fill="#fff" fill-opacity=".5"/><path d="M12 6c1-3 4-4 7-3-1 3-4 4-7 3z" fill="#5a9e4f"/></svg>';
+  var heart = '<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" fill="#e53b7a"/></svg>';
+  walker.addEventListener("click", function () {
+    jump.classList.remove("go");
+    void jump.getBoundingClientRect();
+    jump.classList.add("go");
+    var r = walker.getBoundingClientRect();
+    var p = document.createElement("span");
+    p.className = "pop";
+    p.innerHTML = Math.random() < 0.6 ? yuzu : heart;
+    p.style.left = (r.left + r.width / 2) + "px";
+    document.body.appendChild(p);
+    setTimeout(function () { p.remove(); }, 2300);
+  });
+})();
+</script>
+</body>
+</html>
