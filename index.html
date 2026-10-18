@@ -125,7 +125,7 @@ footer p { margin: 4px 0; }
 
 /* Along the bottom of the page, taking turns: a capybara bounds across in one-sixth gravity,
    then ROVER-1 drives back the other way with a pup riding on its roof. */
-.track { position: fixed; left: 0; right: 0; bottom: 0; height: 120px; overflow: hidden; pointer-events: none; z-index: 20; }
+.track { position: fixed; left: 0; right: 0; bottom: 0; height: calc(env(safe-area-inset-bottom, 0px) + 150px); overflow: hidden; pointer-events: none; z-index: 20; }
 .walker, .rover {
   position: absolute; left: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
   padding: 0; border: 0; background: none; cursor: pointer;
@@ -133,7 +133,12 @@ footer p { margin: 4px 0; }
 }
 .walker { width: 64px; height: 56px; animation: walk-across 50s linear infinite; }
 .rover { width: 104px; height: 70px; animation: drive-back 50s linear infinite; }
-.walker:hover, .rover:hover, .walker:hover *, .rover:hover * { animation-play-state: paused; }
+/* Pause on mouse hover only: on a touch screen a tap leaves :hover stuck on, which froze them mid-jump */
+@media (hover: hover) and (pointer: fine) {
+  .walker:hover, .rover:hover, .walker:hover .bound, .walker:hover .leg, .walker:hover .dust,
+  .rover:hover .wheel, .rover:hover .ride, .rover:hover .chassis { animation-play-state: paused; }
+}
+.rover { --hop: 22px; }
 @keyframes walk-across {
   0%    { transform: translateX(-90px); }
   48%   { transform: translateX(calc(100vw + 30px)); }
@@ -164,11 +169,15 @@ footer p { margin: 4px 0; }
 .dust { animation: dust 1.7s ease-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
 @keyframes dust { 0% { opacity: .9; transform: scale(.4); } 30% { opacity: 0; transform: scale(1.4); } 100% { opacity: 0; } }
 .jump { transform-box: fill-box; transform-origin: 50% 100%; }
-.jump.go { animation: jump 2.4s cubic-bezier(.25,.8,.35,1); }
+.jump.go { animation: jump 1.3s cubic-bezier(.3,.7,.4,1); }
 @keyframes jump {
   0% { transform: translateY(0); }
-  45% { transform: translateY(-62px) rotate(-10deg); }
+  45% { transform: translateY(calc(-1 * var(--hop, 34px))) rotate(-8deg); }
   100% { transform: translateY(0) rotate(0); }
+}
+.build {
+  position: fixed; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 6px); z-index: 19;
+  font-size: 0.72rem; color: var(--muted); opacity: 0.75; pointer-events: none;
 }
 .pop {
   position: fixed; bottom: 90px; width: 26px; height: 26px; margin-left: -13px;
@@ -326,6 +335,8 @@ footer p { margin: 4px 0; }
   <p>© 2026 Mark Florentino LLC</p>
   <p>Updated 18 October 2026</p>
 </footer>
+
+<div class="build">v1.2</div>
 
 <div class="track">
   <button class="walker" type="button" aria-label="A capybara bounding along. Tap to make it jump.">
